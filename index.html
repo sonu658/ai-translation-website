@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Translation & Grammar Refinement</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #212121;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #2C3E50;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 255, 255, 0.2);
+        }
+        h1 {
+            color: #2ECC71;
+        }
+        textarea, select, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #34495E;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 16px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 AI Translation & Grammar Refinement</h1>
+        <p>Translate text, refine grammar, and check accuracy.</p>
+
+        <label for="input-text">Enter Text:</label>
+        <textarea id="input-text" placeholder="Type in any supported language"></textarea>
+
+        <label for="lang-select">Select Language:</label>
+        <select id="lang-select">
+            <option value="auto">Auto Detect</option>
+            <option value="hi">Hindi</option>
+            <option value="bn">Bengali</option>
+            <option value="ta">Tamil</option>
+            <option value="te">Telugu</option>
+            <option value="mr">Marathi</option>
+            <option value="gu">Gujarati</option>
+            <option value="ml">Malayalam</option>
+            <option value="kn">Kannada</option>
+            <option value="pa">Punjabi</option>
+            <option value="or">Odia</option>
+            <option value="ur">Urdu</option>
+        </select>
+
+        <button onclick="translateText()">Translate & Refine</button>
+
+        <h2>Results</h2>
+        <label for="translated-text">AI Translation:</label>
+        <textarea id="translated-text" readonly></textarea>
+
+        <label for="refined-text">Refined Grammar:</label>
+        <textarea id="refined-text" readonly></textarea>
+    </div>
+
+    <script>
+        async function translateText() {
+            let text = document.getElementById("input-text").value;
+            let lang = document.getElementById("lang-select").value;
+
+            if (!text.trim()) {
+                alert("⚠️ Please enter text.");
+                return;
+            }
+
+            let apiUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${lang}&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+            let response = await fetch(apiUrl);
+            let data = await response.json();
+            let translation = data[0].map(item => item[0]).join(" ");
+            
+            let grammarApiUrl = `https://api.languagetool.org/v2/check?text=${encodeURIComponent(translation)}&language=en-US`;
+            let grammarResponse = await fetch(grammarApiUrl, { method: "POST" });
+            let grammarData = await grammarResponse.json();
+            let refinedText = translation;
+
+            if (grammarData.matches.length > 0) {
+                grammarData.matches.forEach(match => {
+                    refinedText = refinedText.replace(match.context.text, match.replacements[0]?.value || match.context.text);
+                });
+            }
+            
+            document.getElementById("translated-text").value = translation;
+            document.getElementById("refined-text").value = refinedText;
+        }
+    </script>
+</body>
+</html>
